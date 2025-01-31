@@ -2,4 +2,4 @@ flask
 gunicorn
 transformers
 opencensus-ext-azure
-torch
+torch --index-url https://download.pytorch.org/whl/cu118
