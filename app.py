@@ -23,9 +23,13 @@ app = Flask(__name__)
 logger = logging.getLogger(__name__)
 logger.addHandler(AzureLogHandler(connection_string="InstrumentationKey=eb1f5681-33d5-4303-a67b-ced937b5ad09;IngestionEndpoint=https://francecentral-1.in.applicationinsights.azure.com/;LiveEndpoint=https://francecentral.livediagnostics.monitor.azure.com/;ApplicationId=9d966a96-db65-43fc-a9ef-b24d87e21088"))
 logger.setLevel(logging.INFO)
-logger.info('Hello, World!')
+# logger.info('Hello, World!')
 
+@app.route('/')
+def home():
+    return "Hello, Heroku!"
 
+    
 @app.route('/pred', methods=['POST'])
 def pred():
     data = request.json
