@@ -21,8 +21,6 @@ app = Flask(__name__)
 # Azure logs
 logger = logging.getLogger(__name__)
 logger.addHandler(AzureLogHandler(connection_string="InstrumentationKey=eb1f5681-33d5-4303-a67b-ced937b5ad09;IngestionEndpoint=https://francecentral-1.in.applicationinsights.azure.com/;LiveEndpoint=https://francecentral.livediagnostics.monitor.azure.com/;ApplicationId=9d966a96-db65-43fc-a9ef-b24d87e21088"))
-logger.setLevel(logging.INFO)
-# logger.info('Hello, World!')
 
 
 @app.route('/')
@@ -42,10 +40,10 @@ def pred():
 @app.route('/logprederror', methods=['POST'])
 def logprederror():
     data = request.json
-    for k in ["text", "sentiment"]:
+    for k in ["text", "sentiment", "correct"]:
         if k not in data:
             return jsonify({"error": f"Need '{k}' key"}), 400
-    text = f"{data['text']}❣︎{data['sentiment']}"
+    text = f"{data['text']}❣︎{data['sentiment']❣︎{data['correct']}}"
     print("log text:", text)
     logger.warning(text)
     return jsonify({"status": "success"}), 200
