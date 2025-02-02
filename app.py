@@ -1,26 +1,68 @@
 from flask import Flask, jsonify, request
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, TextClassificationPipeline
-import logging
-from opencensus.ext.azure.log_exporter import AzureLogHandler
+import json
+import pickle
+import nltk
+from nltk.corpus import stopwords as nltk_stopwords
+from nltk.tokenize import word_tokenize
+from nltk.stem import PorterStemmer
+from unidecode import unidecode
+import string
 
 
-# define model_pred func
-def model_pred(text):
-    global pipe
-    pred = pipe(text)[0]
-    pred = int("".join([c for c in pred["label"] if c.isnumeric()]))
+def prepro_text(text,
+                stop_words,
+                stemming_ps,
+                remove_html=True,
+                remove_accents=True,
+                lower=True,
+                replace_hashtag=True,
+                remove_stopwords=True,
+                remove_punct=True,
+                stemming=True):
+    if remove_html:
+        text = BeautifulSoup(text).text
+    if remove_accents:
+        text = unidecode(text)
+    if lower:
+        text = text.lower()
+    if replace_hashtag:
+        text = text.replace("#", " hashtag ")
+    if remove_punct:
+        text = text.translate(str.maketrans("", "", string.punctuation))
+    if remove_stopwords:
+        tokens = word_tokenize(text)
+        tokens = [w for w in tokens if not w.lower() in stop_words]
+        text = " ".join(tokens)
+    text = " ".join(text.split())
+    if stemming:
+        if stemming_ps is None:
+            raise ValueError("Need stemming ps argument.")
+        tokens = word_tokenize(text)
+        stem_tokens = [stemming_ps.stem(t) for t in tokens]
+        text = " ".join(stem_tokens)
+    return text
+
+
+def pred_text(text, encoder, model, stop_words, stemming_ps):
+    text = prepro_text(text, stop_words, stemming_ps)
+    tokens = encoder.transform([text])
+    pred = model.predict(tokens)[0]
     return pred
-model_name = 'phanerozoic/BERT-Sentiment-Classifier'
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForSequenceClassification.from_pretrained(model_name)
-pipe = TextClassificationPipeline(model=model, tokenizer=tokenizer)
+
+
+# Load model
+model_path = 'sentiment_model.p'
+encoder_path = 'sentiment_encoder.pk'
+model = pickle.load(open(model_path, 'rb'))
+encoder = pickle.load(open(encoder_path, 'rb'))
+nltk.download("punkt")
+stemming_ps = PorterStemmer()
+stop_words = nltk_stopwords.words('english')
+stop_words = list(set(stop_words))
+stop_words.sort()
 
 # create Flask app
 app = Flask(__name__)
-
-# Azure logs
-logger = logging.getLogger(__name__)
-logger.addHandler(AzureLogHandler(connection_string="InstrumentationKey=eb1f5681-33d5-4303-a67b-ced937b5ad09;IngestionEndpoint=https://francecentral-1.in.applicationinsights.azure.com/;LiveEndpoint=https://francecentral.livediagnostics.monitor.azure.com/;ApplicationId=9d966a96-db65-43fc-a9ef-b24d87e21088"))
 
 
 @app.route('/')
@@ -33,20 +75,8 @@ def pred():
     data = request.json
     if "text" not in data:
         return jsonify({"error": "Need text key"}), 400
-    pred = model_pred(data["text"])
+    pred = pred_text(data["text"], encoder, model, stop_words, stemming_ps)
     return jsonify({"sentiment": pred}), 200
-
-
-@app.route('/logprederror', methods=['POST'])
-def logprederror():
-    data = request.json
-    for k in ["text", "sentiment", "correct"]:
-        if k not in data:
-            return jsonify({"error": f"Need '{k}' key"}), 400
-    text = f"{data['text']}❣︎{data['sentiment']❣︎{data['correct']}}"
-    print("log text:", text)
-    logger.warning(text)
-    return jsonify({"status": "success"}), 200
 
 
 if __name__ == '__main__':
