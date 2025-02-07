@@ -1,7 +1,5 @@
 flask
 gunicorn
-opencensus-ext-azure
-pickle
 scikit-learn
 beautifulsoup4
 unidecode
