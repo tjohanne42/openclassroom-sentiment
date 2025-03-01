@@ -1,6 +1,6 @@
 # openclassroom-sentiment
 
-Flask API using Bert sentiment model.
+Flask API using SVC sentiment model trained on tweets.
 
 # Quickstart
 
