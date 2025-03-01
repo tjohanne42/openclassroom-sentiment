@@ -6,5 +6,5 @@ Flask API using Bert sentiment model.
 
 ``` bash
 pip install -r requirements.txt
-python main.py
+python app.py
 ```
