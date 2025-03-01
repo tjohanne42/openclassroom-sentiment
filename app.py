@@ -28,8 +28,11 @@ def prepro_text(text,
         stop_words = nltk_stopwords.words('english')
         stop_words = list(set(stop_words))
         stop_words.sort()
-    # if remove_html:
-    #     text = BeautifulSoup(text).text
+    if remove_html:
+        try:
+            text = BeautifulSoup(text).text
+        except:
+            pass
     if remove_accents:
         text = unidecode(text)
     if lower:
