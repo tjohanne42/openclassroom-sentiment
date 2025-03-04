@@ -9,6 +9,7 @@ Using Flask API to deploy the selected model (app.py).
 - sentiment_encoder.pk, sentiment_model.p: model files for API
 - test_api.py: unitary test for API
 - nltk.txt, Procfile: setup files to deploy on Heroku
+- requirements.txt: requirements for API
 
 # Train models:
 ``` bash
