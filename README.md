@@ -17,7 +17,7 @@ jupyter lab
 # use main.ipynb
 ```
 
-# Use API:
+# Use API:blbl
 ``` bash
 pip install -r requirements.txt
 python app.py
